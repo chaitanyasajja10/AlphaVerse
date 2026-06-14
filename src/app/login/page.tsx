@@ -174,12 +174,12 @@ export default function LoginPage() {
                 <OutlineButton onClick={() => router.push('/register')}>
                   📋 Request New Account
                 </OutlineButton>
-                <OutlineButton onClick={() => {}}>
+                <OutlineButton onClick={() => router.push('/forgot-password')}>
                   🔑 Forgot Password
                 </OutlineButton>
               </div>
               <div style={{ marginTop: 10, textAlign: 'center' }}>
-                <OutlineButton onClick={() => {}}>
+                <OutlineButton onClick={() => router.push('/forgot-username')}>
                   🪪 Forgot Username
                 </OutlineButton>
               </div>
