@@ -29,10 +29,18 @@ CREATE TABLE IF NOT EXISTS kids (
   birth_year    INTEGER NOT NULL,
   parent_id     UUID REFERENCES parents(id) ON DELETE SET NULL,
   parent_email  TEXT NOT NULL,
+  school_name   TEXT,
+  current_grade TEXT,
+  date_of_birth DATE,
   approved      BOOLEAN DEFAULT FALSE,
   points        INTEGER DEFAULT 0,
   created_at    TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Add columns if upgrading existing DB
+ALTER TABLE kids ADD COLUMN IF NOT EXISTS school_name   TEXT;
+ALTER TABLE kids ADD COLUMN IF NOT EXISTS current_grade TEXT;
+ALTER TABLE kids ADD COLUMN IF NOT EXISTS date_of_birth DATE;
 
 -- ── Communities table ─────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS communities (
