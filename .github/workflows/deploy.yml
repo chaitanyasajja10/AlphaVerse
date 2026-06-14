@@ -20,7 +20,9 @@ jobs:
         env:
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: |
-          psql "postgresql://postgres.zodriqdrbbidwgtlehvp@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres" \
+          # Use direct connection (not pooler) so DDL + NOTIFY work correctly
+          psql "postgresql://postgres.zodriqdrbbidwgtlehvp@db.zodriqdrbbidwgtlehvp.supabase.co:5432/postgres" \
             -f supabase/schema.sql \
-            --set ON_ERROR_STOP=off
+            --set ON_ERROR_STOP=off \
+            -v ON_ERROR_STOP=0
           echo "✅ Schema migration complete"
