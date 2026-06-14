@@ -6,42 +6,21 @@ on:
   workflow_dispatch:
 
 jobs:
-  migrate-and-deploy:
+  migrate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
       - name: Install PostgreSQL client
         run: sudo apt-get install -y postgresql-client
 
-      - name: Run database schema
+      - name: Run database schema migrations
         env:
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: |
           psql "postgresql://postgres.zodriqdrbbidwgtlehvp@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres" \
-            -f supabase/schema.sql --set ON_ERROR_STOP=off
-          echo "Schema migration complete"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Deploy to Vercel
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: |
-          npx vercel --token "$VERCEL_TOKEN" --prod --yes \
-            -e NEXT_PUBLIC_SUPABASE_URL="${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" \
-            -e NEXT_PUBLIC_SUPABASE_ANON_KEY="${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" \
-            -e SUPABASE_SERVICE_ROLE_KEY="${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
-            -e ADMIN_SECRET_KEY="${{ secrets.ADMIN_SECRET_KEY }}"
+            -f supabase/schema.sql \
+            --set ON_ERROR_STOP=off
+          echo "✅ Schema migration complete"
