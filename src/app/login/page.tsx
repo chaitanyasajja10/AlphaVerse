@@ -62,14 +62,10 @@ export default function LoginPage() {
   /* ── Quick demo login ── */
   async function handleDemoLogin() {
     setError(''); setDemoLoading(true)
-    const res = await fetch('/api/auth/kid/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ identifier: 'demo', password: 'demo123' }),
-    })
+    const res = await fetch('/api/auth/demo', { method: 'POST' })
     const data = await res.json()
     setDemoLoading(false)
-    if (!res.ok) return setError('Demo account not set up yet')
+    if (!res.ok) return setError(data.error || 'Demo login failed')
     router.push('/home')
   }
 
