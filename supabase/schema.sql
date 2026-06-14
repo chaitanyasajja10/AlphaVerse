@@ -8,12 +8,13 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ── Parents table ─────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS parents (
-  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  email         TEXT UNIQUE NOT NULL,
-  display_name  TEXT NOT NULL DEFAULT 'Parent',
-  password_hash TEXT NOT NULL,
-  pin_hash      TEXT,
-  created_at    TIMESTAMPTZ DEFAULT NOW()
+  id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email           TEXT UNIQUE NOT NULL,
+  display_name    TEXT NOT NULL DEFAULT 'Parent',
+  password_hash   TEXT NOT NULL,
+  pin_hash        TEXT,
+  approval_status TEXT DEFAULT 'approved' CHECK (approval_status IN ('pending','approved','rejected','suspended')),
+  created_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ── Kids table ────────────────────────────────────────────────────────────
@@ -32,7 +33,8 @@ CREATE TABLE IF NOT EXISTS kids (
   school_name   TEXT,
   current_grade TEXT,
   date_of_birth DATE,
-  approved      BOOLEAN DEFAULT FALSE,
+  approved         BOOLEAN DEFAULT FALSE,
+  approval_status  TEXT    DEFAULT 'pending' CHECK (approval_status IN ('pending','approved','rejected','suspended')),
   points        INTEGER DEFAULT 0,
   created_at    TIMESTAMPTZ DEFAULT NOW()
 );
@@ -184,6 +186,13 @@ $$ LANGUAGE plpgsql;
 -- ALTER TABLE kids ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
 
+-- Add approval_status columns if upgrading existing DB
+ALTER TABLE kids    ADD COLUMN IF NOT EXISTS approval_status TEXT DEFAULT 'pending' CHECK (approval_status IN ('pending','approved','rejected','suspended'));
+ALTER TABLE parents ADD COLUMN IF NOT EXISTS approval_status TEXT DEFAULT 'approved' CHECK (approval_status IN ('pending','approved','rejected','suspended'));
+
+-- Sync existing kids rows: approved=true → approval_status='approved'
+UPDATE kids SET approval_status = CASE WHEN approved = TRUE THEN 'approved' ELSE 'pending' END WHERE approval_status IS NULL OR approval_status = 'pending';
+
 -- Reload PostgREST schema cache after column additions
 NOTIFY pgrst, 'reload schema';
 
@@ -197,23 +206,23 @@ VALUES (
 ) ON CONFLICT (email) DO NOTHING;
 
 -- ── Seed: test students (password: Student@123, all approved) ─────────────
-INSERT INTO kids (tyf_id, username, display_name, email, password_hash, birth_year, school_name, current_grade, parent_id, parent_email, approved, avatar_emoji, bio, points)
+INSERT INTO kids (tyf_id, username, display_name, email, password_hash, birth_year, school_name, current_grade, parent_id, parent_email, approved, approval_status, avatar_emoji, bio, points)
 VALUES
   ('TYF-TEST-001', 'alex_coder', 'Alex Johnson', 'alex@test.com',
    '$2b$12$ZXE0cccqQwCKGu4iSmt6IOyLq4BMP.MARPZVcJmkwxMRfrpyxxiIG',
    2012, 'DPS Bangalore', 'Grade 7',
    'aaaaaaaa-0000-0000-0000-000000000001', 'parent@test.com',
-   TRUE, '🦁', 'I love coding and robotics!', 120),
+   TRUE, 'approved', '🦁', 'I love coding and robotics!', 120),
 
   ('TYF-TEST-002', 'priya_artist', 'Priya Sharma', 'priya@test.com',
    '$2b$12$8l.1yEGu6VmjMeURUaO9se4e4LJKoQBJ3WNdC9MMIRmzPrgjgJ4lS',
    2013, 'Kendriya Vidyalaya', 'Grade 6',
    'aaaaaaaa-0000-0000-0000-000000000001', 'parent@test.com',
-   TRUE, '🦋', 'Drawing, painting, and making stories 🎨', 85),
+   TRUE, 'approved', '🦋', 'Drawing, painting, and making stories 🎨', 85),
 
   ('TYF-TEST-003', 'rohan_explorer', 'Rohan Mehta', 'rohan@test.com',
    '$2b$12$c6DsYEMhj.QnyV8jUnSZkO.uz5ZuEcJfNurzO38mmH/AkMhTac6s6',
    2011, 'Ryan International', 'Grade 8',
    'aaaaaaaa-0000-0000-0000-000000000001', 'parent@test.com',
-   TRUE, '🐉', 'Science nerd. Astronomy is my thing 🔭', 210)
+   TRUE, 'approved', '🐉', 'Science nerd. Astronomy is my thing 🔭', 210)
 ON CONFLICT (username) DO NOTHING;

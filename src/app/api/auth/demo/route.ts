@@ -28,6 +28,7 @@ export async function POST() {
         birth_year: 2012,
         parent_email: 'demo-parent@alphaverse.com',
         approved: true,
+        approval_status: 'approved',
         avatar_emoji: '🚀',
         bio: 'Demo account for exploring AlphaVerse',
       })
@@ -51,7 +52,7 @@ export async function POST() {
 
   // Ensure approved
   if (!kid.approved) {
-    await supabase.from('kids').update({ approved: true }).eq('id', kid.id)
+    await supabase.from('kids').update({ approved: true, approval_status: 'approved' }).eq('id', kid.id)
   }
 
   const res = NextResponse.json({

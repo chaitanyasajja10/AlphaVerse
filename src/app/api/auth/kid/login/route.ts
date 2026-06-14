@@ -19,7 +19,13 @@ export async function POST(req: NextRequest) {
   if (error || !kid)
     return NextResponse.json({ error: 'Account not found. Check your username.' }, { status: 401 })
 
-  if (!kid.approved)
+  if (kid.approval_status === 'rejected')
+    return NextResponse.json({ error: 'Your account has been rejected. Please contact support.' }, { status: 403 })
+
+  if (kid.approval_status === 'suspended')
+    return NextResponse.json({ error: 'Your account has been suspended. Please contact support.' }, { status: 403 })
+
+  if (!kid.approved || kid.approval_status !== 'approved')
     return NextResponse.json({ error: 'Your account is waiting for parent approval. Ask your parent to check their email!' }, { status: 403 })
 
   const match = await bcrypt.compare(password, kid.password_hash)

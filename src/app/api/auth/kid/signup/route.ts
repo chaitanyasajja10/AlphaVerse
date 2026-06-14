@@ -74,6 +74,7 @@ export async function POST(req: NextRequest) {
     parent_email: parentEmail.toLowerCase(),
     avatar_emoji: pickEmoji(),
     approved: false,
+    approval_status: 'pending',
     points: 0,
   }
 
