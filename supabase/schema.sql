@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS posts (
   author_id    UUID REFERENCES kids(id) ON DELETE CASCADE,
   content      TEXT NOT NULL CHECK (char_length(content) <= 1000),
   media_url    TEXT,
-  status       TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+  status       TEXT DEFAULT 'Pending Approval' CHECK (status IN ('Pending Approval', 'Approved', 'Rejected')),
   community_id UUID REFERENCES communities(id) ON DELETE SET NULL,
   created_at   TIMESTAMPTZ DEFAULT NOW()
 );
@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS challenge_submissions (
   challenge_id UUID REFERENCES challenges(id) ON DELETE CASCADE,
   kid_id       UUID REFERENCES kids(id) ON DELETE CASCADE,
   content      TEXT,
-  status       TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+  status       TEXT DEFAULT 'Pending Approval' CHECK (status IN ('Pending Approval', 'Approved', 'Rejected')),
   created_at   TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(challenge_id, kid_id)
 );
@@ -185,6 +185,14 @@ $$ LANGUAGE plpgsql;
 -- Enable if you ever use anon key directly from client.
 -- ALTER TABLE kids ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
+
+-- Migrate posts status values to match new naming
+ALTER TABLE posts DROP CONSTRAINT IF EXISTS posts_status_check;
+ALTER TABLE posts ADD CONSTRAINT posts_status_check CHECK (status IN ('Pending Approval', 'Approved', 'Rejected'));
+UPDATE posts SET status = 'Pending Approval' WHERE status = 'pending';
+UPDATE posts SET status = 'Approved'         WHERE status = 'approved';
+UPDATE posts SET status = 'Rejected'         WHERE status = 'rejected';
+ALTER TABLE posts ALTER COLUMN status SET DEFAULT 'Pending Approval';
 
 -- Add approval_status columns if upgrading existing DB
 ALTER TABLE kids    ADD COLUMN IF NOT EXISTS approval_status TEXT DEFAULT 'pending' CHECK (approval_status IN ('pending','approved','rejected','suspended'));
