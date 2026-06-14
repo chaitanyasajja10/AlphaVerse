@@ -164,7 +164,7 @@ export default function LoginPage() {
           ══════════════════════════════════════ */}
           {tab === 'student' && (
             <form onSubmit={handleStudentLogin}>
-              <Field label="Username" name="identifier" placeholder="Your username" />
+              <Field label="Username / TYF ID / Email" name="identifier" placeholder="e.g. alex_coder · TYF-ABC123 · you@email.com" />
               <Field label="Password" name="password" type="password" placeholder="Your account password" />
 
               <GreenButton loading={loading}>Sign In →</GreenButton>

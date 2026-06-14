@@ -9,15 +9,15 @@ export async function POST(req: NextRequest) {
 
   const supabase = await createAdminClient()
 
-  // Find by username or TYF ID
+  // Find by username, TYF ID, or email
   const { data: kid, error } = await supabase
     .from('kids')
     .select('*')
-    .or(`username.eq.${identifier},tyf_id.eq.${identifier}`)
+    .or(`username.eq.${identifier},tyf_id.eq.${identifier},email.eq.${identifier}`)
     .single()
 
   if (error || !kid)
-    return NextResponse.json({ error: 'Account not found. Check your username.' }, { status: 401 })
+    return NextResponse.json({ error: 'Account not found. Try your username, TYF ID, or email.' }, { status: 401 })
 
   if (kid.approval_status === 'rejected')
     return NextResponse.json({ error: 'Your account has been rejected. Please contact support.' }, { status: 403 })
