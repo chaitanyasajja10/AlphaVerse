@@ -183,3 +183,6 @@ $$ LANGUAGE plpgsql;
 -- Enable if you ever use anon key directly from client.
 -- ALTER TABLE kids ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
+
+-- Reload PostgREST schema cache after column additions
+NOTIFY pgrst, 'reload schema';

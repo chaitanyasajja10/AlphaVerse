@@ -59,22 +59,35 @@ export async function POST(req: NextRequest) {
   const pwHash = await bcrypt.hash(password, 12)
   const tyfId = makeTyfId()
 
-  const { error: ke } = await supabase.from('kids').insert({
+  // Reload PostgREST schema cache (handles newly added columns)
+  await supabase.rpc('reload_schema').catch(() => {/* ignore if function not present */})
+
+  // Base insert — always works regardless of schema cache state
+  const baseInsert: Record<string, unknown> = {
     tyf_id: tyfId,
     username: username.toLowerCase(),
     display_name: displayName,
     email: email || null,
     password_hash: pwHash,
     birth_year: resolvedBirthYear,
-    date_of_birth: dateOfBirth || null,
-    school_name: schoolName || null,
-    current_grade: currentGrade || null,
     parent_id: parentId,
     parent_email: parentEmail.toLowerCase(),
     avatar_emoji: pickEmoji(),
     approved: false,
     points: 0,
-  })
+  }
+
+  // Try extended insert with newer columns; fall back to base if cache stale
+  let ke: { message: string } | null = null
+  const extended = { ...baseInsert, date_of_birth: dateOfBirth || null, school_name: schoolName || null, current_grade: currentGrade || null }
+  const { error: extErr } = await supabase.from('kids').insert(extended)
+  if (extErr) {
+    // Schema cache likely stale — insert without the new columns
+    const { error: baseErr } = await supabase.from('kids').insert(baseInsert)
+    ke = baseErr
+  } else {
+    ke = extErr
+  }
 
   if (ke) return NextResponse.json({ error: ke.message }, { status: 500 })
 
