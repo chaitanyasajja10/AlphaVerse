@@ -186,3 +186,34 @@ $$ LANGUAGE plpgsql;
 
 -- Reload PostgREST schema cache after column additions
 NOTIFY pgrst, 'reload schema';
+
+-- ── Seed: test parent ─────────────────────────────────────────────────────
+INSERT INTO parents (id, email, display_name, password_hash)
+VALUES (
+  'aaaaaaaa-0000-0000-0000-000000000001',
+  'parent@test.com',
+  'Test Parent',
+  '$2b$12$dKx21tQhwR3B0ETsXYi.4eTVMcUc6WbpblDanYpOxGpCizEls/2y2'
+) ON CONFLICT (email) DO NOTHING;
+
+-- ── Seed: test students (password: Student@123, all approved) ─────────────
+INSERT INTO kids (tyf_id, username, display_name, email, password_hash, birth_year, school_name, current_grade, parent_id, parent_email, approved, avatar_emoji, bio, points)
+VALUES
+  ('TYF-TEST-001', 'alex_coder', 'Alex Johnson', 'alex@test.com',
+   '$2b$12$ZXE0cccqQwCKGu4iSmt6IOyLq4BMP.MARPZVcJmkwxMRfrpyxxiIG',
+   2012, 'DPS Bangalore', 'Grade 7',
+   'aaaaaaaa-0000-0000-0000-000000000001', 'parent@test.com',
+   TRUE, '🦁', 'I love coding and robotics!', 120),
+
+  ('TYF-TEST-002', 'priya_artist', 'Priya Sharma', 'priya@test.com',
+   '$2b$12$8l.1yEGu6VmjMeURUaO9se4e4LJKoQBJ3WNdC9MMIRmzPrgjgJ4lS',
+   2013, 'Kendriya Vidyalaya', 'Grade 6',
+   'aaaaaaaa-0000-0000-0000-000000000001', 'parent@test.com',
+   TRUE, '🦋', 'Drawing, painting, and making stories 🎨', 85),
+
+  ('TYF-TEST-003', 'rohan_explorer', 'Rohan Mehta', 'rohan@test.com',
+   '$2b$12$c6DsYEMhj.QnyV8jUnSZkO.uz5ZuEcJfNurzO38mmH/AkMhTac6s6',
+   2011, 'Ryan International', 'Grade 8',
+   'aaaaaaaa-0000-0000-0000-000000000001', 'parent@test.com',
+   TRUE, '🐉', 'Science nerd. Astronomy is my thing 🔭', 210)
+ON CONFLICT (username) DO NOTHING;
